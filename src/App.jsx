@@ -14,10 +14,10 @@ const RegisterPage = () => {
 
   const handleRegister = (e) => {
     e.preventDefault();
-    if (!email || !password || !name) return alert('Заповніть усі поля!');
+    if (!email || !password || !name) return alert('Заповніть поля');
     
     dispatch(registerUser({ name, email, password }));
-    alert('Реєстрація успішна! Тепер увійдіть у систему.');
+    alert('Реєстрація успішна увійдіть у систему.');
     navigate('/login');
   };
 
@@ -54,7 +54,7 @@ const LoginPage = () => {
       dispatch(loginSuccess(user));
       navigate(from, { replace: true });
     } else {
-      alert('Невірний email або пароль! Переконайтеся, що ви зареєструвалися.');
+      alert('Невірний email або пароль.');
     }
   };
 
@@ -79,7 +79,7 @@ const HomePage = () => {
 
   const handleBuy = (product) => {
     if (!isAuthenticated) {
-      alert('Тільки зареєстровані користувачі можуть купувати товари!');
+      alert('Тільки зареєстровані користувачі можуть купувати товари');
       navigate('/login');
     } else {
       dispatch(addToCart(product));
@@ -115,7 +115,6 @@ const HomePage = () => {
 
 const CheckoutPage = () => {
   const { cart } = useSelector((state) => state.shop);
-  const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -131,41 +130,9 @@ const CheckoutPage = () => {
   const item = cart[0]; 
 
   const handleProcessPayment = () => {
-    const wayforpay = new window.Wayforpay();
-
-    wayforpay.run({
-        merchantAccount: "test_merch_n1", 
-        merchantDomainName: window.location.hostname,
-        authorizationType: "SimpleSignature",
-        merchantSignature: "", 
-        orderReference: `Order_${Date.now()}`,
-        orderDate: Math.floor(Date.now() / 1000),
-        amount: item.price.toString(),
-        currency: "UAH",
-        productName: [item.name],
-        productPrice: [item.price.toString()],
-        productCount: ["1"],
-        clientFirstName: user?.name || "Гість",
-        clientLastName: "Користувач",
-        clientEmail: user?.email || "test@gmail.com",
-        clientPhone: "+380990000000",
-      },
-      function (response) {
-        if (response.reasonCode === 1100 || response.transactionStatus === "Approved") {
-          alert("Оплата успішна! Товар додано в історію покупок.");
-          dispatch(addToHistory({ ...item, orderId: response.orderReference, date: new Date().toLocaleDateString() }));
-          navigate('/history'); 
-        } else {
-          alert(`Помилка оплати: ${response.reason}`);
-        }
-      },
-      function (response) {
-        alert("Оплату відхилено. Ви залишаєтесь на цій сторінці для повторної спроби.");
-      },
-      function (response) {
-        console.log("Віджет закритий користувачем");
-      }
-    );
+    const orderId = `Order_${Date.now()}`;
+    dispatch(addToHistory({ ...item, orderId, date: new Date().toLocaleDateString() }));
+    navigate('/history'); 
   };
 
   return (
@@ -177,7 +144,7 @@ const CheckoutPage = () => {
         <div>Сума до сплати: {item.price} грн</div>
       </div>
       <button onClick={handleProcessPayment}>
-        Оплатити карткою (WayForPay)
+        Оплатити
       </button>
     </div>
   );
